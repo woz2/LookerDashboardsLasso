@@ -1,5 +1,5 @@
 # *************************************************
-# GDS - DOWNLOADING DATA
+# LOOKER STUDIO - RETRIEVING DATA
 # *************************************************
 
 # Importing libraries
@@ -145,6 +145,7 @@ def gds_automation(jobconfig):
     _DRIVER_FILEPATH = _baseconfig.loc[0, 'INPUT_PATH']
     _PROFILE_PATH = _baseconfig.loc[1, 'INPUT_PATH']
     _DOWNLOAD_FOLDER_PATH = _baseconfig.loc[2, 'INPUT_PATH']
+    _BINARY_LOCATION_PATH = _baseconfig.loc[3, 'INPUT_PATH']
     __LOG_FILE_PATH_SUCCESS = _DOWNLOAD_FOLDER_PATH + _LOG_FILE_SUCCESS_NAME
     __LOG_FILE_PATH_ERROR = _DOWNLOAD_FOLDER_PATH + _LOG_FILE_ERROR_NAME
 
@@ -156,6 +157,7 @@ def gds_automation(jobconfig):
     desired = DesiredCapabilities.FIREFOX
     opts = webdriver.FirefoxOptions()
     opts.headless = True
+    opts.binary_location = _BINARY_LOCATION_PATH
     log_content("Settings has been set", __LOG_FILE_PATH_SUCCESS)
 
     for row_nr in range(len(_config_df.index)):
@@ -166,9 +168,9 @@ def gds_automation(jobconfig):
         _countries = _config_df.loc[row_nr, 'COUNTRIES']
         _page_load_element = _config_df.loc[row_nr, 'PAGE_LOAD_ELEMENT']
         _progress_bar = _config_df.loc[row_nr, 'PROGRESS_BAR']
+        _date_filter = int(_config_df.loc[row_nr, 'FILTER_BY_DATE'])
         _date1 = _config_df.loc[row_nr, 'DATE1']
         _date2 = _config_df.loc[row_nr, 'DATE2']
-        # _date22 = _config_df.loc[row_nr, 'DATE22']
         _date3 = _config_df.loc[row_nr, 'DATE3']
         _date3_1 = _config_df.loc[row_nr, 'DATE31']
         _date3_2 = _config_df.loc[row_nr, 'DATE32']
@@ -200,28 +202,32 @@ def gds_automation(jobconfig):
         except:
             log_content("Error with loading page and finding main element. Process stopped.", __LOG_FILE_PATH_ERROR)
             break
-        # Initializing date filters
-        try:
-            click_button(_path_to_element=_date1, __action=_action, _driver=driver_used)
-            click_button(_path_to_element=_date2, __action=_action, _driver=driver_used)
 
-            log_content("Date filters has been initialized", __LOG_FILE_PATH_SUCCESS)
-        except:
-            log_content("Problem with expanding date menu filters. Process stopped.", __LOG_FILE_PATH_ERROR)
-            break
+        # If date filter is TRUE in the config file, applying country filter
+        if _date_filter == 1:
+            try:
+                click_button(_path_to_element=_date1, __action=_action, _driver=driver_used)
+                click_button(_path_to_element=_date2, __action=_action, _driver=driver_used)
 
-            # Setting date filters
-        try:
-            date_id = xpath_sub_id(_path_to_main_element=_date2, _id_opt=_date3, _text_to_replace=_date3_1,
-                               _part_new1=_date3_2, _part_new2=_date3_3, _driver=driver_used)
-            scroll_and_click(_path_to_element=date_id, _driver=driver_used)
-            click_button(_path_to_element=_date4, __action=_action, _driver=driver_used)
-            log_content("Date filters has been set", __LOG_FILE_PATH_SUCCESS)
-        except:
-            log_content("Problem with setting date filters. Process stopped.", __LOG_FILE_PATH_ERROR)
-            break
+                log_content("Date filters has been initialized", __LOG_FILE_PATH_SUCCESS)
+            except:
+                log_content("Problem with expanding date menu filters. Process stopped.", __LOG_FILE_PATH_ERROR)
+                break
 
-        #If country filter is TRUE in the config file, applying country filter
+                # Setting date filters
+            try:
+                date_id = xpath_sub_id(_path_to_main_element=_date2, _id_opt=_date3, _text_to_replace=_date3_1,
+                                   _part_new1=_date3_2, _part_new2=_date3_3, _driver=driver_used)
+                scroll_and_click(_path_to_element=date_id, _driver=driver_used)
+                click_button(_path_to_element=_date4, __action=_action, _driver=driver_used)
+                log_content("Date filters has been set", __LOG_FILE_PATH_SUCCESS)
+            except:
+                log_content("Problem with setting date filters. Process stopped.", __LOG_FILE_PATH_ERROR)
+                break
+        elif _date_filter == 0:
+            log_content("Date filter was not applied", __LOG_FILE_PATH_SUCCESS)
+
+        # If country filter is TRUE in the config file, applying country filter
         if _country_filter == 1:
 
             # Wait for the dashboard to load
@@ -295,7 +301,6 @@ def gds_automation(jobconfig):
         try:
             time.sleep(2)
             click_button_css_selector(_path_to_element=_export_menu, __action=_action, _driver=driver_used)
-            #click_button(_path_to_element=_export_menu, __action=_action, _driver=driver_used)
             log_content("Export button has been clicked", __LOG_FILE_PATH_SUCCESS)
         except:
             log_content("Problem with finding export button in menu. Process stopped.", __LOG_FILE_PATH_ERROR)

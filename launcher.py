@@ -7,7 +7,7 @@ from os.path import isfile, join
 configspath = "configs"
 baseconfig = "base_config.xlsx"
 
-configfiles = [f for f in listdir(configspath) if isfile(join(configspath, f))]
+configfiles = [f for f in listdir(configspath) if isfile(join(configspath, f)) and f.endswith("xlsx")]
 configfiles.remove(baseconfig)
 configfiles = ["/configs/"+f for f in configfiles]
 jobconfig = ''
